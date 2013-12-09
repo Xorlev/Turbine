@@ -196,7 +196,7 @@ public class InstanceMonitor extends TurbineDataMonitor<DataFromSingleInstance> 
      */
     @Override
     public String getName() {
-        return host.getHostname();
+        return host.getName();
     }
 
     /**

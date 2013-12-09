@@ -61,36 +61,38 @@ public class Instance implements Comparable<Instance> {
         isUp = status;
         attributes = new HashMap<String, String>();
     }
-    
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (obj == null) return false;
-        if (getClass() != obj.getClass()) return false;
-        
-        Instance other = (Instance) obj;
-        
-        boolean equals = true; 
-        equals &= (this.hostname != null) ? (this.hostname.equals(other.hostname)) : (other.hostname == null);
-        equals &= (this.cluster != null) ? (this.cluster.equals(other.cluster)) : (other.cluster == null);
-        equals &= (this.isUp == other.isUp);
 
-        return equals;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Instance instance = (Instance) o;
+
+        if (isUp != instance.isUp) return false;
+        if (attributes != null ? !attributes.equals(instance.attributes) : instance.attributes != null) return false;
+        if (cluster != null ? !cluster.equals(instance.cluster) : instance.cluster != null) return false;
+        if (hostname != null ? !hostname.equals(instance.hostname) : instance.hostname != null) return false;
+
+        return true;
     }
-    
+
     @Override
     public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((hostname == null) ? 0 : hostname.hashCode());
-        result = prime * result + ((cluster == null) ? 0 : cluster.hashCode());
-        result = prime * result + (isUp ? 1 : 0);
+        int result = hostname != null ? hostname.hashCode() : 0;
+        result = 31 * result + (cluster != null ? cluster.hashCode() : 0);
+        result = 31 * result + (isUp ? 1 : 0);
+        result = 31 * result + (attributes != null ? attributes.hashCode() : 0);
         return result;
     }
-    
+
     @Override
     public String toString() {
         return "StatsInstance [hostname=" + hostname + ", cluster: " + cluster + ", isUp: " + isUp + ", attrs=" + attributes.toString() + "]";
+    }
+
+    public String getName() {
+        return hostname+hashCode();
     }
 
     /**

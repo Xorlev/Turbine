@@ -16,6 +16,7 @@
 package com.netflix.turbine.monitor.cluster;
 
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.startsWith;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -284,7 +285,7 @@ public abstract class ClusterMonitor<K extends TurbineData> extends TurbineDataM
         }
 
         public void hostDown(Instance host) {
-            TurbineDataMonitor<DataFromSingleInstance> hostMonitor = hostConsole.findMonitor(host.getHostname());
+            TurbineDataMonitor<DataFromSingleInstance> hostMonitor = hostConsole.findMonitor(host.getName());
             if(hostMonitor != null) {
                 hostCount.decrementAndGet();
                 hostMonitor.stopMonitor();
@@ -295,7 +296,7 @@ public abstract class ClusterMonitor<K extends TurbineData> extends TurbineDataM
         
         private TurbineDataMonitor<DataFromSingleInstance> getMonitor(Instance host) {
             
-            TurbineDataMonitor<DataFromSingleInstance> monitor = hostConsole.findMonitor(host.getHostname());
+            TurbineDataMonitor<DataFromSingleInstance> monitor = hostConsole.findMonitor(host.getName());
             if (monitor == null) {
                 monitor = new InstanceMonitor(host, urlClosure, hostDispatcher, hostConsole);
                 hostCount.incrementAndGet();
@@ -383,7 +384,7 @@ public abstract class ClusterMonitor<K extends TurbineData> extends TurbineDataM
             
             monitor.monitorManager.hostsUp(Collections.singletonList(host1));
      
-            verify(hConsole).findMonitor(host1.getHostname());
+            verify(hConsole).findMonitor(host1.getName());
             verify(hostMon).startMonitor();
             verify(hDispatcher).registerEventHandler(host1, handler);
         }
@@ -395,16 +396,16 @@ public abstract class ClusterMonitor<K extends TurbineData> extends TurbineDataM
 
             InstanceMonitor hostMon = mock(InstanceMonitor.class); 
             when(hConsole.findMonitor(any(String.class))).thenReturn(hostMon);
-            when(hostMon.getName()).thenReturn(host1.getHostname());
+            when(hostMon.getName()).thenReturn(host1.getName());
             
             TestClusterMonitor monitor = new TestClusterMonitor();
             
             
             monitor.monitorManager.hostsDown(Collections.singletonList(host1));
      
-            verify(hConsole).findMonitor(host1.getHostname());
+            verify(hConsole).findMonitor(host1.getName());
             verify(hostMon).stopMonitor();
-            verify(hConsole).removeMonitor("testHost1");
+            verify(hConsole).removeMonitor(startsWith("testHost1"));
         }
         
         private class TestClusterMonitor extends ClusterMonitor<AggDataFromCluster> {

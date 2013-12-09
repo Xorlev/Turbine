@@ -108,7 +108,7 @@ public class AggregateClusterMonitor extends ClusterMonitor<AggDataFromCluster> 
         this.observationCriteria = observeCriteria;
         this.performanceCriteria = perfCriteria;
         
-        this.timedCache = new TimeBoundCache<String>(name); // keep state around for 10 mins when hosts are being purged
+        this.timedCache = new TimeBoundCache<String>(name); // keep state around for 5 mins when hosts are being purged
         
         this.metaInfo = new MetaInformation<AggDataFromCluster>(this, new AggDataMetaInfoAdaptor(this));
     }
@@ -209,6 +209,10 @@ public class AggregateClusterMonitor extends ClusterMonitor<AggDataFromCluster> 
         public String getName() {
             return monitor.getName() + "_aggClusterEventHandler";
         }
+
+        private String instanceCacheKey(Instance instance) {
+            return instance.getHostname()+"_"+instance.getAttributes().hashCode();
+        }
         
         /**
          * Handle new data from the API server we are monitoring.
@@ -222,7 +226,7 @@ public class AggregateClusterMonitor extends ClusterMonitor<AggDataFromCluster> 
             
             for (DataFromSingleInstance data : statsData) {
                 
-                if(monitor.timedCache.lookup(data.getHost().getHostname())) {
+                if(monitor.timedCache.lookup(instanceCacheKey(data.getHost()))) {
                     // this host was removed recently. Pruning out the garbage that is still in handler tuple queue for this host
                     continue;
                 }
@@ -283,7 +287,7 @@ public class AggregateClusterMonitor extends ClusterMonitor<AggDataFromCluster> 
         @Override
         public void handleHostLost(Instance host) {
             logger.info("Host lost: " + host.getHostname() + ", adding to time based cache\n");
-            monitor.timedCache.put(host.getHostname());
+            monitor.timedCache.put(instanceCacheKey(host));
             
             for (TurbineData.Key key : monitor.aggregateData.keySet()) {
                 AggDataFromCluster dataFromCluster = monitor.aggregateData.get(key);

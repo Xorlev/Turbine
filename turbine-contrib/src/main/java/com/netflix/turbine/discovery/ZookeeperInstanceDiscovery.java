@@ -104,7 +104,13 @@ public class ZookeeperInstanceDiscovery implements InstanceDiscovery {
         List<Instance> collectedInstances = Lists.newArrayList();
 
         for (ServiceCache<Void> serviceCache : serviceCaches) {
-            for (ServiceInstance<Void> serviceInstance : serviceCache.getInstances()) {
+            List<ServiceInstance<Void>> serviceInstances = serviceCache.getInstances();
+
+            if (serviceInstances.size() > 0) {
+                log.info("{}: Found {} instances", serviceInstances.get(0).getName(), serviceInstances.size());
+            }
+
+            for (ServiceInstance<Void> serviceInstance : serviceInstances) {
                 Instance instance = new Instance(
                         serviceInstance.getAddress(),
                         serviceInstance.getName(),

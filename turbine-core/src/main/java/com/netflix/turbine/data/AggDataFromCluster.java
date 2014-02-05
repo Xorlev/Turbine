@@ -178,14 +178,14 @@ public class AggDataFromCluster extends TurbineData {
      */
     public void addStatsDataFromSingleServer(DataFromSingleInstance data) {
         
-        HostDataHolder historicalDataHolder = reportingHostsWithLastData.get(data.getHost().getHostname());
+        HostDataHolder historicalDataHolder = reportingHostsWithLastData.get(hostCacheKey(data.getHost()));
         if (historicalDataHolder == null) {
 
-            historicalDataHolder = reportingHostsWithLastData.putIfAbsent(data.getHost().getHostname(), new HostDataHolder());
+            historicalDataHolder = reportingHostsWithLastData.putIfAbsent(hostCacheKey(data.getHost()), new HostDataHolder());
             // if it's not null that means another thread beat us to setting it and we got it back
             if (historicalDataHolder == null) {
                 // this means we created it and need to retrieve it again
-                historicalDataHolder = reportingHostsWithLastData.get(data.getHost().getHostname());
+                historicalDataHolder = reportingHostsWithLastData.get(hostCacheKey(data.getHost()));
             }
         }
         
@@ -275,6 +275,10 @@ public class AggDataFromCluster extends TurbineData {
         historicalDataHolder.hostActivityCounter.increment(StatsRollingNumber.Type.EVENT_PROCESSED);
     }
 
+    private String hostCacheKey(Instance instance) {
+        return instance.getHostname()+"_"+instance.getAttributes().hashCode();
+    }
+
     private void aggregateNumericMap(Map<String, ? extends Number> sourceAttrs, 
                                      ConcurrentHashMap<String, AtomicLong> targetAttrs,
                                      Map<String, ? extends Number> historicalAttrs) {
@@ -315,7 +319,7 @@ public class AggDataFromCluster extends TurbineData {
     public void removeDataForHost(Instance host) {
 
         // remove it in a thread-safe manner and get what is removed (if something is removed) to then do the cleanup after
-        HostDataHolder historicalDataHolder = reportingHostsWithLastData.remove(host.getHostname());
+        HostDataHolder historicalDataHolder = reportingHostsWithLastData.remove(hostCacheKey(host));
         if (historicalDataHolder == null || historicalDataHolder.lastData.get() == null) {
             // this host never reported data or it has already been removed
             return;
